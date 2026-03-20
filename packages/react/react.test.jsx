@@ -5,7 +5,17 @@ import { LinguaProvider, useLingua } from './index.jsx';
 const mockLinguaData = {
   translations: {
     en: {
-      php: { 'hello': 'Hello :name!', 'welcome': 'Welcome' },
+      php: {
+          'hello': 'Hello :name!',
+          'welcome': 'Welcome',
+          'sidebar': {
+            'dashboard': 'Dashboard',
+            'reservations': 'Reservations',
+            'activities': 'Activities',
+            'settings': 'Settings',
+            'logout': 'Logout',
+          }
+      },
       json: { 'plural_test': 'apple|apples' }
     },
     es: {
@@ -37,6 +47,15 @@ describe('React Lingua Bindings', () => {
     expect(screen.getByTestId('trans').textContent).toBe('Welcome');
   });
 
+  test('trans function correctly translates a key with nested structure', () => {
+    render(
+      <LinguaProvider locale="en" Lingua={mockLinguaData}>
+        <TestComponent translationKey="sidebar.dashboard" />
+      </LinguaProvider>
+    );
+    expect(screen.getByTestId('trans').textContent).toBe('Dashboard');
+  });
+
   test('trans function correctly replaces placeholders', () => {
     render(
       <LinguaProvider locale="en" Lingua={mockLinguaData}>
@@ -63,7 +82,7 @@ describe('React Lingua Bindings', () => {
     );
     expect(screen.getByTestId('transChoice').textContent).toBe('apples');
   });
-  
+
   test('transChoice function correctly replaces placeholders and handles plural form', () => {
     mockLinguaData.translations.en.json.plural_test_replace = 'one :item|many :items';
     render(
