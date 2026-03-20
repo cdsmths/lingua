@@ -16,7 +16,7 @@ const mockLinguaData = {
             'logout': 'Logout',
           }
       },
-      json: { 'plural_test': 'apple|apples' }
+      json: { 'plural_test': 'apple|apples', 'plural_test_replace': 'one :item|many :items' }
     },
     es: {
       php: { 'hello': 'Hola :name!', 'welcome': 'Bienvenido'},
@@ -35,6 +35,16 @@ const TestComponent = ({ translationKey, replace, choiceKey, choiceCount, choice
       {choiceKey && <p data-testid="transChoice">{transChoice(choiceKey, choiceCount, choiceReplacements)}</p>}
     </div>
   );
+};
+
+const TestComponentWithAlias = ({ translationKey }) => {
+  const { __ } = useLingua();
+  return <p data-testid="alias">{__(translationKey)}</p>;
+};
+
+const ComponentOutsideProvider = () => {
+  useLingua();
+  return null;
 };
 
 describe('React Lingua Bindings', () => {
@@ -84,14 +94,12 @@ describe('React Lingua Bindings', () => {
   });
 
   test('transChoice function correctly replaces placeholders and handles plural form', () => {
-    mockLinguaData.translations.en.json.plural_test_replace = 'one :item|many :items';
     render(
       <LinguaProvider locale="en" Lingua={mockLinguaData}>
         <TestComponent choiceKey="plural_test_replace" choiceCount={5} choiceReplacements={{ item: 'test_item' }} />
       </LinguaProvider>
     );
     expect(screen.getByTestId('transChoice').textContent).toBe('many test_items');
-    delete mockLinguaData.translations.en.json.plural_test_replace; // Clean up
   });
 
 
@@ -137,5 +145,24 @@ describe('React Lingua Bindings', () => {
       </LinguaProvider>
     );
     expect(screen.getByTestId('transChoice').textContent).toBe('missing_plural_key');
+  });
+
+  test('__ is an alias for trans', () => {
+    render(
+      <LinguaProvider locale="en" Lingua={mockLinguaData}>
+        <TestComponentWithAlias translationKey="welcome" />
+      </LinguaProvider>
+    );
+    expect(screen.getByTestId('alias').textContent).toBe('Welcome');
+  });
+
+  test('useLingua throws when used outside LinguaProvider', () => {
+    const originalError = console.error;
+    console.error = () => {};
+    try {
+      expect(() => render(<ComponentOutsideProvider />)).toThrow('useLingua must be used within a LinguaProvider');
+    } finally {
+      console.error = originalError;
+    }
   });
 });
